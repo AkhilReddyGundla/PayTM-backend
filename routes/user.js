@@ -1,6 +1,7 @@
 const express = require("express")
 const {User,Accounts} = require("../db")
 const zod = require("zod");
+const bcrypt = require('bcrypt')
 const jwt = require("jsonwebtoken")
 const {JWT_SECRET} = require("../config")
 const router = express.Router();
@@ -25,11 +26,8 @@ const changesCheck = zod.object({
 
 
 
-
-
 router.post("/signup",async (req,res)=>{
     const body = req.body;
-    // console.log(body)
     const {success} = signupCheck.safeParse(body)
     if(!success){
         return res.status(411).send({
@@ -44,9 +42,13 @@ router.post("/signup",async (req,res)=>{
             "Msg" : "User exists in database"
         })
     }
+
+    //bcrypt (hashing password) using salt
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(body.password,saltRounds);
     const newUser = await User.create({
         "username" : body.username,
-        "password" : body.password,
+        "password" : hash,
         "firstName" : body.firstName,
         "lastName" : body.lastName
     })
@@ -67,15 +69,18 @@ router.post("/signup",async (req,res)=>{
 
 router.post("/signin",async(req,res)=>{
     const body = req.body;
-    console.log(body)
     const {success} = signinCheck.safeParse(body);
     if(!success){
         return res.status(411).json({
             "Msg" : "Enter valid details"
         })
     }
-    const user = await User.findOne({username : body.username, password : body.password})
-    if (user) {
+    const user = await User.findOne({username : body.username})
+    const isPasswordMatch = await bcrypt.compare(body.password,user.password)
+
+    console.log(body.password)
+    console.log(user.password)
+    if (user && isPasswordMatch===true) {
         const token = jwt.sign({
             userId: user._id
         }, JWT_SECRET);

@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require("bcrypt");
-const { Schema } = require('zod');
 mongoose.connect('mongodb+srv://akhilreddygundla:Akhil%40_06@cluster0.1rlofxa.mongodb.net/PayTM?retryWrites=true&w=majority');
 
 const userSchema = new mongoose.Schema({
@@ -16,7 +14,7 @@ const userSchema = new mongoose.Schema({
         required : true,
         trim:true,
         minLength :2,
-        maxLength : 20
+        maxLength : 100
     },
     firstName : {
         type : String,
